@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MyVoult Authentication Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 440px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f4f6fb;
+      color: #172033;
+    }
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 5px 24px #0001;
+    }
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+    input { border: 1px solid #ccd2df; }
+    button {
+      border: 0;
+      background: #3157d5;
+      color: white;
+      cursor: pointer;
+    }
+    button.secondary { background: #455168; }
+    #status {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>MyVoult</h1>
+    <p>Create an account or sign in to test authentication.</p>
+
+    <form id="auth-form">
+      <label for="email">Email address</label>
+      <input id="email" type="email"
+             autocomplete="email" required>
+
+      <label for="password">Password</label>
+      <input id="password" type="password"
+             autocomplete="current-password"
+             minlength="6" required>
+
+      <button type="button" id="signup">Create account</button>
+      <button type="submit">Log in</button>
+    </form>
+
+    <button type="button" id="logout" class="secondary">
+      Log out
+    </button>
+
+    <p id="status" role="status">Ready to connect.</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Copy these two values from your working supabase-test.html.
+    const SUPABASE_URL = "https://tcshmsntdfjxrtprtbek.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_GjBJ3JGypYTnt0uK-L4gZQ_QcZ18gll";
+
+    const status = document.getElementById("status");
+
+    const client = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    function show(message) {
+      status.textContent = message;
+    }
+
+    document.getElementById("signup").addEventListener(
+      "click", async () => {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (!email || !password) {
+          show("Enter your email and password first.");
+          return;
+        }
+
+        show("Creating account...");
+
+        const { data, error } = await client.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: "https://fazle637.github.io/MyVoult/"
+          }
+        });
+
+        if (error) {
+          show("Signup failed: " + error.message);
+          return;
+        }
+
+        if (data.session) {
+          show("Account created and signed in as " +
+               data.user.email);
+        } else {
+          show("Signup request successful! Check your email " +
+               "for the confirmation link before logging in.");
+        }
+      }
+    );
+
+    document.getElementById("auth-form").addEventListener(
+      "submit", async (event) => {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        show("Logging in...");
+
+        const { data, error } =
+          await client.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          show("Login failed: " + error.message);
+          return;
+        }
+
+        show("Login successful!\nSigned in as: " +
+             data.user.email);
+      }
+    );
+
+    document.getElementById("logout").addEventListener(
+      "click", async () => {
+        const { error } = await client.auth.signOut();
+
+        if (error) {
+          show("Logout failed: " + error.message);
+          return;
+        }
+
+        show("Logged out successfully.");
+      }
+    );
+
+    client.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        show("Session check failed: " + error.message);
+      } else if (data.session) {
+        show("Already logged in as " +
+             data.session.user.email);
+      }
+    });
+  </script>
+</body>
+</html>
