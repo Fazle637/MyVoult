@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MyVoult - Supabase Connection Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 650px;
+      margin: 60px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    #result {
+      padding: 16px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>MyVoult Connection Test</h1>
+  <p>Checking the connection to Supabase...</p>
+  <div id="result">Please wait...</div>
+
+  <script>
+    const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL_HERE";
+    const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+    async function testConnection() {
+      const result = document.getElementById("result");
+
+      try {
+        if (
+          SUPABASE_URL.includes("PASTE_") ||
+          SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")
+        ) {
+          throw new Error("Add your Project URL and publishable key first.");
+        }
+
+        const response = await fetch(
+          SUPABASE_URL.replace(/\/+$/, "") + "/auth/v1/settings",
+          {
+            headers: {
+              apikey: SUPABASE_PUBLISHABLE_KEY
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Supabase returned HTTP " + response.status +
+            ". Check the Project URL and publishable key."
+          );
+        }
+
+        const settings = await response.json();
+
+        result.textContent =
+          "Connection successful!\n\n" +
+          "Supabase Auth API: reachable\n" +
+          "New user signups: " +
+          (settings.disable_signup === true
+            ? "disabled"
+            : "allowed");
+
+      } catch (error) {
+        result.textContent =
+          "Connection test failed.\n\n" + error.message;
+      }
+    }
+
+    testConnection();
+  </script>
+</body>
+</html>
